@@ -142,30 +142,12 @@ function KanbanBoard() {
     setTasks(newTasks);
   }
 
-  function updateTask(id: Id, content: string) {
-    const newTasks = tasks.map((task) => {
-      if (task.id !== id) return task;
-      return { ...task, content };
-    });
-
-    setTasks(newTasks);
-  }
-
   function deleteColumn(id: Id) {
     const filteredColumns = columns.filter((col) => col.id !== id);
     setColumns(filteredColumns);
 
     const newTasks = tasks.filter((t) => t.columnId !== id);
     setTasks(newTasks);
-  }
-
-  function updateColumn(id: Id, title: string) {
-    const newColumns = columns.map((col) => {
-      if (col.id !== id) return col;
-      return { ...col, title };
-    });
-
-    setColumns(newColumns);
   }
 
   function onDragStart(event: DragStartEvent) {
@@ -274,10 +256,8 @@ function KanbanBoard() {
                   key={col.id}
                   column={col}
                   deleteColumn={deleteColumn}
-                  updateColumn={updateColumn}
                   createTask={createTask}
                   deleteTask={deleteTask}
-                  updateTask={updateTask}
                   tasks={tasks.filter((task) => task.columnId === col.id)}
                 />
               ))}
@@ -291,21 +271,15 @@ function KanbanBoard() {
               <ColumnContainer
                 column={activeColumn}
                 deleteColumn={deleteColumn}
-                updateColumn={updateColumn}
                 createTask={createTask}
                 deleteTask={deleteTask}
-                updateTask={updateTask}
                 tasks={tasks.filter(
                   (task) => task.columnId === activeColumn.id
                 )}
               />
             )}
             {activeTask && (
-              <TaskCard
-                task={activeTask}
-                deleteTask={deleteTask}
-                updateTask={updateTask}
-              />
+              <TaskCard task={activeTask} deleteTask={deleteTask} />
             )}
           </DragOverlay>,
           document.body

@@ -7,12 +7,10 @@ import { CSS } from "@dnd-kit/utilities";
 interface Props {
   task: Task;
   deleteTask: (id: Id) => void;
-  updateTask: (id: Id, content: string) => void;
 }
 
-function TaskCard({ task, deleteTask, updateTask }: Props) {
+function TaskCard({ task, deleteTask }: Props) {
   const [mouseIsOver, setMouseIsOver] = useState(false);
-  const [editMode, setEditMode] = useState(true);
 
   const {
     setNodeRef,
@@ -27,18 +25,12 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
       type: "Task",
       task,
     },
-    disabled: editMode,
   });
 
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
     touchAction: "none",
-  };
-
-  const toggleEditMode = () => {
-    setEditMode((prev) => !prev);
-    setMouseIsOver(false);
   };
 
   if (isDragging) {
@@ -54,42 +46,12 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
     );
   }
 
-  if (editMode) {
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        className="bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-black cursor-grab relative"
-      >
-        <textarea
-          className="
-        h-[90%]
-        w-full resize-none border-none rounded bg-transparent text-black focus:outline-none
-        "
-          value={task.content}
-          autoFocus
-          placeholder="Task content here"
-          onBlur={toggleEditMode}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.shiftKey) {
-              toggleEditMode();
-            }
-          }}
-          onChange={(e) => updateTask(task.id, e.target.value)}
-        />
-      </div>
-    );
-  }
-
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      onClick={toggleEditMode}
       className="bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-black cursor-grab relative task"
       onMouseEnter={() => {
         setMouseIsOver(true);
