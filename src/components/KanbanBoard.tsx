@@ -9,13 +9,18 @@ import {
   DragOverlay,
   DragStartEvent,
   KeyboardSensor,
+  MeasuringStrategy,
   MouseSensor,
-  PointerSensor,
   TouchSensor,
+  closestCorners,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, arrayMove } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import TaskCard from "./TaskCard";
 
@@ -107,25 +112,16 @@ function KanbanBoard() {
   const [columns, setColumns] = useState<Column[]>(defaultCols);
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
   const mouseSensor = useSensor(MouseSensor);
-  const touchSensor = useSensor(TouchSensor);
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 500, tolerance: 0 },
+  });
   const keyboardSensor = useSensor(KeyboardSensor);
 
   const [tasks, setTasks] = useState<Task[]>(defaultTasks);
 
-  const [activeColumn, setActiveColumn] = useState<Column | null>(null);
-
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-  const sensors = useSensors(
-    mouseSensor,
-    touchSensor,
-    keyboardSensor,
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    })
-  );
+  const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
 
   function createTask(columnId: Id) {
     const newTask: Task = {
@@ -151,11 +147,6 @@ function KanbanBoard() {
   }
 
   function onDragStart(event: DragStartEvent) {
-    if (event.active.data.current?.type === "Column") {
-      setActiveColumn(event.active.data.current.column);
-      return;
-    }
-
     if (event.active.data.current?.type === "Task") {
       setActiveTask(event.active.data.current.task);
       return;
@@ -163,7 +154,6 @@ function KanbanBoard() {
   }
 
   function onDragEnd(event: DragEndEvent) {
-    setActiveColumn(null);
     setActiveTask(null);
 
     const { active, over } = event;
@@ -176,8 +166,6 @@ function KanbanBoard() {
 
     const isActiveAColumn = active.data.current?.type === "Column";
     if (!isActiveAColumn) return;
-
-    console.log("DRAG END");
 
     setColumns((columns) => {
       const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
@@ -219,13 +207,19 @@ function KanbanBoard() {
     const isOverAColumn = over.data.current?.type === "Column";
 
     if (isActiveATask && isOverAColumn) {
-      setTasks((tasks) => {
-        const activeIndex = tasks.findIndex((t) => t.id === activeId);
+      const newTasks = tasks;
 
-        tasks[activeIndex].columnId = overId;
-        console.log("DROPPING TASK OVER COLUMN", { activeIndex });
-        return arrayMove(tasks, activeIndex, activeIndex);
-      });
+      const activeIndex = tasks.findIndex((t) => t.id === activeId);
+
+      const activeTask = newTasks[activeIndex];
+
+      activeTask.columnId = overId;
+
+      newTasks.splice(activeIndex, 1);
+
+      newTasks.unshift(activeTask);
+
+      setTasks(newTasks);
     }
   }
 
@@ -237,9 +231,11 @@ function KanbanBoard() {
         min-h-screen
         w-full
         items-center
+        content-center
         overflow-x-auto
         overflow-y-hidden
         px-[40px]
+        gap-5
     "
     >
       <DndContext
@@ -247,37 +243,31 @@ function KanbanBoard() {
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onDragOver={onDragOver}
+        collisionDetection={closestCorners}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always,
+          },
+        }}
       >
-        <div className="m-auto flex gap-4">
-          <div className="flex gap-4">
-            <SortableContext items={columnsId}>
-              {columns.map((col) => (
-                <ColumnContainer
-                  key={col.id}
-                  column={col}
-                  deleteColumn={deleteColumn}
-                  createTask={createTask}
-                  deleteTask={deleteTask}
-                  tasks={tasks.filter((task) => task.columnId === col.id)}
-                />
-              ))}
-            </SortableContext>
-          </div>
-        </div>
+        <SortableContext
+          items={columnsId}
+          strategy={verticalListSortingStrategy}
+        >
+          {columns.map((col) => (
+            <ColumnContainer
+              key={col.id}
+              column={col}
+              deleteColumn={deleteColumn}
+              createTask={createTask}
+              deleteTask={deleteTask}
+              tasks={tasks.filter((task) => task.columnId === col.id)}
+            />
+          ))}
+        </SortableContext>
 
         {createPortal(
           <DragOverlay>
-            {activeColumn && (
-              <ColumnContainer
-                column={activeColumn}
-                deleteColumn={deleteColumn}
-                createTask={createTask}
-                deleteTask={deleteTask}
-                tasks={tasks.filter(
-                  (task) => task.columnId === activeColumn.id
-                )}
-              />
-            )}
             {activeTask && (
               <TaskCard task={activeTask} deleteTask={deleteTask} />
             )}

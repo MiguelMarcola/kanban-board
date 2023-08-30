@@ -1,8 +1,7 @@
-import { useState } from "react";
 import TrashIcon from "../icons/TrashIcon";
 import { Id, Task } from "../types";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from "@dnd-kit/sortable";
 
 interface Props {
   task: Task;
@@ -10,27 +9,21 @@ interface Props {
 }
 
 function TaskCard({ task, deleteTask }: Props) {
-  const [mouseIsOver, setMouseIsOver] = useState(false);
-
-  const {
-    setNodeRef,
-    attributes,
-    listeners,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: task.id,
-    data: {
-      type: "Task",
-      task,
-    },
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useSortable({
+      id: task.id,
+      data: {
+        type: "Task",
+        task,
+      },
+      transition: {
+        duration: 150,
+        easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+      },
+    });
 
   const style = {
-    transition,
     transform: CSS.Transform.toString(transform),
-    touchAction: "none",
   };
 
   if (isDragging) {
@@ -40,7 +33,7 @@ function TaskCard({ task, deleteTask }: Props) {
         style={style}
         className="
         opacity-30
-      bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl border-2 border-rose-500  cursor-grab relative
+      p-2.5 max-h-[100px] min-h-[100px] items-center flex text-left rounded-xl cursor-grab relative 
       "
       />
     );
@@ -53,29 +46,21 @@ function TaskCard({ task, deleteTask }: Props) {
       {...attributes}
       {...listeners}
       className="bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-black cursor-grab relative task"
-      onMouseEnter={() => {
-        setMouseIsOver(true);
-      }}
-      onMouseLeave={() => {
-        setMouseIsOver(false);
-      }}
     >
       <p className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap">
         {task.content}
       </p>
 
-      {mouseIsOver && (
-        <>
-          <button
-            onClick={() => {
-              deleteTask(task.id);
-            }}
-            className="stroke-white absolute right-4 top-1/2 -translate-y-1/2 bg-black p-2 rounded opacity-60 hover:opacity-100"
-          >
-            <TrashIcon />
-          </button>
-        </>
-      )}
+      <button
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          console.log("Delete button clicked outside");
+          deleteTask(task.id);
+        }}
+        className="stroke-white right-4 bg-black p-2 rounded opacity-60 hover:opacity-100"
+      >
+        <TrashIcon />
+      </button>
     </div>
   );
 }

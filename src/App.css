@@ -6,11 +6,11 @@ html,
 body,
 #root {
   @apply bg-slate-200 text-black box-border;
-  touch-action: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  overscroll-behavior: none;
 }
 
 ::-webkit-scrollbar {

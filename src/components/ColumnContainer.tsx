@@ -1,10 +1,10 @@
-import { SortableContext, useSortable } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import TrashIcon from "../icons/TrashIcon";
 import { Column, Id, Task } from "../types";
-import { CSS } from "@dnd-kit/utilities";
 import { useMemo } from "react";
 import PlusIcon from "../icons/PlusIcon";
 import TaskCard from "./TaskCard";
+import { SortableContext } from "@dnd-kit/sortable";
 
 interface Props {
   column: Column;
@@ -26,14 +26,7 @@ function ColumnContainer({
     return tasks.map((task) => task.id);
   }, [tasks]);
 
-  const {
-    setNodeRef,
-    attributes,
-    listeners,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { setNodeRef } = useDroppable({
     id: column.id,
     data: {
       type: "Column",
@@ -41,38 +34,13 @@ function ColumnContainer({
     },
   });
 
-  const style = {
-    transition,
-    transform: CSS.Transform.toString(transform),
-  };
-
-  if (isDragging) {
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="
-      bg-columnBackgroundColor
-      opacity-40
-      border-2
-      border-pink-500
-      w-[350px]
-      h-[500px]
-      max-h-[500px]
-      rounded-md
-      flex
-      flex-col
-      "
-      ></div>
-    );
-  }
-
   return (
     <div
       ref={setNodeRef}
-      style={style}
       className="
   bg-columnBackgroundColor
+  min-w-[70vw]
+  sm:min-w-[350px]
   w-[350px]
   h-[500px]
   max-h-[500px]
@@ -82,8 +50,6 @@ function ColumnContainer({
   "
     >
       <div
-        {...attributes}
-        {...listeners}
         className=" 
       bg-columnBackgroundColor
       text-md
